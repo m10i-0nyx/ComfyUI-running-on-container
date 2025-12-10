@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 FROM docker.io/nvidia/cuda:12.9.1-devel-ubuntu24.04 AS builder
-ARG COMFYUI_TAG=v0.3.77
+ARG COMFYUI_TAG=v0.4.0
 ENV COMFYUI_DIR=/comfyui
 ENV UV_PYTHON_INSTALL_DIR=/opt/python
 ENV VENV_PATH=/opt/venv
@@ -12,7 +12,8 @@ RUN set -eux \
     && apt-get install -y --no-install-recommends git ninja-build curl \
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && uv venv -p 3.13 ${VENV_PATH} \
-    && . ${VENV_PATH}/bin/activate
+    && . ${VENV_PATH}/bin/activate \
+    && uv pip install nvidia-ml-py
 
 RUN set -eux \
     # ComfyUI-Manager をクローン,　依存関係をインストール
@@ -20,6 +21,7 @@ RUN set -eux \
     && cd ${COMFYUI_DIR} \
     && git checkout tags/${COMFYUI_TAG} \
     && sed -i 's/^torch$/torch==2.7.1/' requirements.txt \
+    && sed -i '/^pynvml=?.*$/d' requirements.txt \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
@@ -28,6 +30,7 @@ RUN set -eux \
     && git clone -b main --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git ComfyUI-Manager \
     && cd ComfyUI-Manager \
     && git pull --force origin main \
+    && sed -i '/^pynvml=?.*$/d' requirements.txt \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
@@ -35,6 +38,7 @@ RUN set -eux \
     && cd ${COMFYUI_DIR}/custom_nodes \
     && git clone https://github.com/ltdrdata/ComfyUI-Impact-Pack.git ComfyUI-Impact-Pack \
     && cd ComfyUI-Impact-Pack \
+    && sed -i '/^pynvml=?.*$/d' requirements.txt \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
@@ -42,6 +46,7 @@ RUN set -eux \
     && cd ${COMFYUI_DIR}/custom_nodes \
     && git clone https://github.com/rgthree/rgthree-comfy.git rgthree-comfy \
     && cd rgthree-comfy \
+    && sed -i '/^pynvml=?.*$/d' requirements.txt \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
@@ -49,6 +54,7 @@ RUN set -eux \
     && cd ${COMFYUI_DIR}/custom_nodes \
     && git clone https://github.com/crystian/comfyui-crystools.git comfyui-crystools \
     && cd comfyui-crystools \
+    && sed -i '/^pynvml=?.*$/d' requirements.txt \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
@@ -57,6 +63,7 @@ RUN set -eux \
     && git clone -b main --depth 1 https://github.com/cubiq/ComfyUI_essentials.git ComfyUI-essentials \
     && cd ComfyUI-essentials \
     && git pull --force origin main \
+    && sed -i '/^pynvml=?.*$/d' requirements.txt \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
@@ -65,6 +72,7 @@ RUN set -eux \
     && git clone -b main --depth 1 https://github.com/kijai/ComfyUI-Hunyuan3DWrapper.git ComfyUI-Hunyuan3DWrapper \
     && cd ComfyUI-Hunyuan3DWrapper \
     && git pull --force origin main \
+    && sed -i '/^pynvml=?.*$/d' requirements.txt \
     && uv pip install -r requirements.txt \
     # Rasterizer, to build and install
     && cd ${COMFYUI_DIR}/custom_nodes/ComfyUI-Hunyuan3DWrapper/hy3dgen/texgen/custom_rasterizer \
@@ -74,6 +82,7 @@ RUN set -eux \
     && uv pip install --no-build-isolation . \
     # Boundary Preserving Transform install
     && cd ${COMFYUI_DIR}/custom_nodes/ComfyUI-Hunyuan3DWrapper/hy3dgen/shapegen/bpt \
+    && sed -i '/^pynvml=?.*$/d' requirements.txt \
     && uv pip install -r requirements.txt
 
 RUN set -eux \

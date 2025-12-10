@@ -21,7 +21,7 @@ ARGS="${ARGS} --dont-print-server"
 
 # ComfyUIのコンテナを実行
 # WSL2起動時に実行すればOK
-podman run -d \
+podman run -d --replace \
   --name comfyui \
   -p 8188:8188 \
   -p 8888:8888 \

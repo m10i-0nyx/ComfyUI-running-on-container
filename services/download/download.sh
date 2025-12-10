@@ -3,27 +3,41 @@
 set -Eeuo pipefail
 
 # TODO: maybe just use the .gitignore file to create all of these
-mkdir -vp /data/.cache \
-  /data/embeddings \
-  /data/config/custom_nodes \
-  /data/models/ \
-  /data/models/checkpoints \
-  /data/models/diffusion_models \
-  /data/models/vae \
-  /data/models/loras \
-  /data/models/upscale \
-  /data/models/hypernetworks \
-  /data/models/controlnet \
-  /data/models/gligen \
-  /data/models/clip
+mkdir -p /workspace/data/.cache
+mkdir -p /workspace/data/models/{checkpoints,clip,clip_vision,controlnet,diffusion_models,gligen,hypernetworks,loras,text_encoders,upscale,vae}
 
-echo "Downloading, this might take a while..."
+DOWNLOAD_LIST="/container/download.list"
+DOWNLOAD_DIR="/workspace/data/models"
 
-aria2c -x 10 --disable-ipv6 --input-file /docker/links.txt --dir /data/models --continue
+if [ -f "$DOWNLOAD_LIST" ]; then
+    echo "${DOWNLOAD_LIST} found. Starting aria2c downloads..."
+    mkdir -p "$DOWNLOAD_DIR"
 
-echo "Checking SHAs..."
+    aria2c \
+        --continue=true \
+        --allow-overwrite=false \
+        --auto-file-renaming=false \
+        --max-connection-per-server=4 \
+        --split=16 \
+        --dir="${DOWNLOAD_DIR}" \
+        --input-file="${DOWNLOAD_LIST}"
 
-parallel --will-cite -a /docker/checksums.sha256 "echo -n {} | sha256sum -c"
+    echo "Download finished."
+else
+    echo "No ${DOWNLOAD_LIST} found. Skipping download."
+fi
+
+CHECKSUM_LIST="/container/checksums.list"
+if [ -f "$CHECKSUM_LIST" ]; then
+    echo "${CHECKSUM_LIST} found. Starting sha256sum verification..."
+
+    parallel --will-cite -a "${CHECKSUM_LIST}" "echo -n {} | sha256sum -c"
+
+    echo "Checksum verification finished."
+else
+    echo "No ${CHECKSUM_LIST} found. Skipping checksum verification."
+fi
+
 
 cat <<EOF
 By using this software, you agree to the following licenses:

@@ -10,23 +10,23 @@ if [ -f env ]; then
 fi
 
 # モデルをダウンロードするためのコンテナをビルド
-podman build -t model-downloader:latest \
+podman build -t comfyui-model-downloader:latest \
   --force-rm \
-  --volume "$(pwd)/data:/data" \
   ./services/download/
 
 # モデルをダウンロードするためのコンテナを実行
 # 初回にだけ実行
 podman run -it --rm \
-  --name model-downloader \
-  --volume "$(pwd)/data:/data" \
-  localhost/model-downloader:latest
+  --name comfyui-model-downloader \
+  --volume "$(pwd)/data:/workspace/data" \
+  localhost/comfyui-model-downloader:latest
 
 # ComfyUIのコンテナをビルド
 podman build -t comfyui:${COMFYUI_TAG} \
   --force-rm \
   --build-arg COMFYUI_TAG=${COMFYUI_TAG} \
   --device "nvidia.com/gpu=all" \
+  --volume "$(pwd)/data:/workspace/data" \
   ./services/comfyui/
 
 # ComfyUIのコンテナをバックグラウンドで起動
@@ -46,4 +46,4 @@ podman build -t comfyui:${COMFYUI_TAG} \
 # xargs -0 -I {} python3 /docker/convert_ckpt2safetensors.py "{}"'
 
 # コンテナ削除
-podman container rm -f comfyui
+#podman container rm -f comfyui
