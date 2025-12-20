@@ -2,6 +2,10 @@ import os
 import threading
 import http.server
 import socketserver
+import math
+import tempfile
+import zipfile
+from urllib.parse import urlparse, parse_qs
 
 
 # -----------------------------
@@ -13,6 +17,8 @@ OUTPUT_DIR = os.path.abspath(
     "/workspace/output"  # ComfyUI の出力フォルダパスに合わせる
 )
 
+PAGE_SIZE = 50  # 1ページあたりの画像数（0で全件表示）
+IMAGE_EXTS = ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.mp4', '.avi', '.webm')
 
 # -----------------------------
 # HTTP サーバスレッド
@@ -26,25 +32,104 @@ class ThreadedHTTPServer(threading.Thread):
 
     def run(self):
         os.chdir(self.directory)
-        # ギャラリーページを返すカスタムハンドラ
+
         class GalleryHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             def __init__(self, *args, directory=None, **kwargs):
                 super().__init__(*args, directory=directory, **kwargs)
 
-            def list_images_html(self):
+            def collect_all_images(self):
+                imgs = []
+                for root, _, files in os.walk(os.getcwd()):
+                    for f in files:
+                        if f.lower().endswith(IMAGE_EXTS):
+                            full = os.path.join(root, f)
+                            rel = os.path.relpath(full, os.getcwd())
+                            imgs.append((full, rel))
+                # 名前降順（ファイル名基準）でソート
+                imgs.sort(key=lambda t: t[1], reverse=True)
+                return imgs
+
+            def send_zip_all_images(self):
+                imgs = self.collect_all_images()
+                if not imgs:
+                    self.send_response(404)
+                    self.send_header('Content-Type', 'text/plain; charset=utf-8')
+                    self.end_headers()
+                    self.wfile.write(b'No images to download.')
+                    return
+
+                # 一時ファイルを使ってZIPを作成（Temporary関数を利用）
+                with tempfile.NamedTemporaryFile(suffix='.zip', delete=True) as tmp:
+                    tmp_path = tmp.name
+
+                    with zipfile.ZipFile(tmp_path, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
+                        for full, rel in imgs:
+                            # arcname は相対パスで保存
+                            try:
+                                zf.write(full, arcname=rel)
+                            except Exception:
+                                # 個別ファイル書込失敗は無視して続行
+                                continue
+                    tmp.seek(0)
+
+                    size = os.path.getsize(tmp_path)
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/zip')
+                    self.send_header('Content-Disposition', 'attachment; filename="comfyui_output_gallery.zip"')
+                    self.send_header('Content-Length', str(size))
+                    self.end_headers()
+
+                    # ストリーミング送信（メモリ節約）
+                    with open(tmp_path, 'rb') as f:
+                        chunk_size = 64 * 1024
+                        while True:
+                            chunk = f.read(chunk_size)
+                            if not chunk:
+                                break
+                            try:
+                                self.wfile.write(chunk)
+                            except BrokenPipeError:
+                                break
+
+            def list_images_html(self, page=1):
                 try:
-                    files = sorted(
-                        f for f in os.listdir(os.getcwd())
-                        if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp'))
-                    )
+                    files = [rel for (_, rel) in self.collect_all_images()]
                 except Exception:
                     files = []
 
-                # シンプルなギャラリー（遅延読み込みは IntersectionObserver を使用）
+                total = len(files)
+                page = max(1, min(page, max(1, math.ceil(total / PAGE_SIZE) if PAGE_SIZE > 0 else 1)))
+                start = (page - 1) * PAGE_SIZE
+                end = start + PAGE_SIZE
+                page_files = files[start:end]
+
                 imgs_html = "\n".join(
                     f'<a href="{file}" target="_blank"><img data-src="{file}" alt="{file}" class="lazy"></a>'
-                    for file in files
+                    for file in page_files
                 ) or "<p>No images found.</p>"
+
+                total_pages = max(1, math.ceil(total / PAGE_SIZE)) if PAGE_SIZE > 0 else 1
+
+                def page_link(p, text=None):
+                    text = text or str(p)
+                    return f'<a href="/?page={p}">{text}</a>'
+
+                nav_parts = []
+                if page > 1:
+                    nav_parts.append(page_link(1, "First"))
+                    nav_parts.append(page_link(page - 1, "Prev"))
+                for p in range(max(1, page - 2), min(total_pages, page + 2) + 1):
+                    if p == page:
+                        nav_parts.append(f'<strong>{p}</strong>')
+                    else:
+                        nav_parts.append(page_link(p))
+                if page < total_pages:
+                    nav_parts.append(page_link(page + 1, "Next"))
+                    nav_parts.append(page_link(total_pages, "Last"))
+                nav_html = " | ".join(nav_parts) or ""
+
+                # ダウンロードリンクを追加
+                download_link = '<a href="/download.zip" style="margin-left:16px;">Download All (zip)</a>'
 
                 html = f"""<!doctype html>
 <html lang="ja">
@@ -54,19 +139,25 @@ class ThreadedHTTPServer(threading.Thread):
   <title>ComfyUI Output Gallery</title>
   <style>
     body{{font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding:16px;}}
+    .meta{{margin-bottom:8px;color:#666;}}
     .grid{{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px;}}
     .grid a{{display:block; overflow:hidden; border-radius:8px; background:#111; padding:4px;}}
     .grid img{{width:100%; height:180px; object-fit:cover; display:block; background:#222;}}
+    .pager{{margin:12px 0;padding:8px;background:#f5f5f5;border-radius:6px;}}
+    .pager a{{margin:0 6px;text-decoration:none;color:#06c;}}
+    .pager strong{{margin:0 6px;}}
   </style>
 </head>
 <body>
   <h1>ComfyUI Output Gallery</h1>
-  <p>Images are lazy-loaded. Click to open full image.</p>
+  <div class="meta">Total images: {total} — Page {page} / {total_pages}</div>
+  <div class="meta">{download_link}</div>
+  <div class="pager">{nav_html}</div>
   <div class="grid">
     {imgs_html}
   </div>
+  <div class="pager">{nav_html}</div>
   <script>
-    // IntersectionObserver を使った遅延読み込み
     const lazyImgs = [].slice.call(document.querySelectorAll('img.lazy'));
     if ('IntersectionObserver' in window) {{
       let obs = new IntersectionObserver((entries, observer) => {{
@@ -81,7 +172,6 @@ class ThreadedHTTPServer(threading.Thread):
       }}, {{rootMargin: '200px 0px'}});
       lazyImgs.forEach(img => obs.observe(img));
     }} else {{
-      // フォールバック: すべてロード
       lazyImgs.forEach(img => img.src = img.dataset.src);
     }}
   </script>
@@ -91,16 +181,31 @@ class ThreadedHTTPServer(threading.Thread):
                 return html
 
             def do_GET(self):
-                # ルートまたは index.html へのアクセスでギャラリーページを返す
-                if self.path in ('/', '/index.html'):
-                    content = self.list_images_html().encode('utf-8')
+                parsed = urlparse(self.path)
+                qs = parse_qs(parsed.query)
+                page_vals = qs.get("page", [])
+                try:
+                    page = int(page_vals[0]) if page_vals else 1
+                except Exception:
+                    page = 1
+
+                if parsed.path in ('/', '/index.html'):
+                    content = self.list_images_html(page=page).encode('utf-8')
                     self.send_response(200)
                     self.send_header('Content-Type', 'text/html; charset=utf-8')
                     self.send_header('Content-Length', str(len(content)))
                     self.end_headers()
                     self.wfile.write(content)
                     return
-                # それ以外は通常のファイル配信
+                elif parsed.path in ['/favicon.ico', '/robots.txt']:
+                    self.send_response(404)
+                    self.end_headers()
+                    return
+                elif parsed.path == '/download.zip':
+                    self.send_zip_all_images()
+                    return
+
+                self.path = parsed.path
                 return super().do_GET()
 
         handler_factory = lambda *args, **kwargs: GalleryHTTPRequestHandler(*args, directory=self.directory, **kwargs)
@@ -119,7 +224,7 @@ def start_server_if_needed():
 
     server = ThreadedHTTPServer(OUTPUT_DIR, PORT)
     server.start()
-    start_server_if_needed.server_started = True # type: ignore
+    start_server_if_needed.server_started = True  # type: ignore
 
 
 # モジュールインポート時に実行
