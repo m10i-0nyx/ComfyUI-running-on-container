@@ -1,6 +1,5 @@
 #!/bin/bash
 
-cd /opt/ComfyUI-running-on-container
 if [ -f env ]; then
   set -a
   source ./env
