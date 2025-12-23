@@ -1,4 +1,4 @@
-# ComfyUI running on Linux Container
+# ComfyUI running on container
 
 This repository provides a setup to run [ComfyUI](https://github.com/comfyanonymous/ComfyUI) on a Linux container using Podman/Docker.
 
