@@ -1,12 +1,5 @@
 #!/bin/bash
 
-if [ -f env ]; then
-  set -a
-  source ./env
-  set +a
-fi
-
-# Override with ./.env if it exists
 if [ -f ./.env ]; then
   set -a
   source ./.env
