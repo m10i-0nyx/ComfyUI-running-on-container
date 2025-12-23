@@ -2,7 +2,9 @@
 
 set -Eeuo pipefail
 
-cd /opt/ComfyUI-running-on-container
+# ComfyUI tag initial value
+export COMFYUI_TAG=""
+
 if [ -f env ]; then
   set -a
   source ./env
@@ -22,28 +24,9 @@ podman run -it --rm \
   localhost/comfyui-model-downloader:latest
 
 # ComfyUIのコンテナをビルド
-podman build -t comfyui:${COMFYUI_TAG} \
+podman build -t comfyui:${COMFYUI_TAG:-"latest"} \
   --force-rm \
-  --build-arg COMFYUI_TAG=${COMFYUI_TAG} \
+  --build-arg "COMFYUI_TAG=${COMFYUI_TAG}" \
   --device "nvidia.com/gpu=all" \
   --volume "$(pwd)/data:/workspace/data" \
   ./services/comfyui/
-
-# ComfyUIのコンテナをバックグラウンドで起動
-#podman run -d --replace \
-#  --name comfyui \
-#  --volume "$(pwd)/data:/workspace/data" \
-#  --device "nvidia.com/gpu=all" \
-#  localhost/comfyui:${COMFYUI_TAG} \
-#  sleep infinity
-
-# 変換処理
-#podman exec -t comfyui bash -c \
-#'find /workspace/data/models/diffusion_models/ -type f -name "*.ckpt" -print0 |
-# xargs -0 -I {} python3 /docker/convert_ckpt2safetensors.py "{}"'
-#podman exec -t comfyui bash -c \
-#'find /workspace/data/models/checkpoints/ -type f -name "*.ckpt" -print0 |
-# xargs -0 -I {} python3 /docker/convert_ckpt2safetensors.py "{}"'
-
-# コンテナ削除
-#podman container rm -f comfyui

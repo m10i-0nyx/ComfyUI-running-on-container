@@ -6,6 +6,15 @@ mkdir -p ${WORKSPACE}/data/models/{checkpoints,clip,clip_vision,controlnet,diffu
 
 declare -A MOUNTS
 
+. ${VENV_PATH}/bin/activate
+
+echo "===== ComfyUI Entrypoint Info ====="
+echo "Workspace: ${WORKSPACE}"
+echo "Venv: ${VENV_PATH}"
+echo "Python: $(which python) ($(python --version))"
+echo "----- torch info -----"
+python -c "import torch; print('torch=', torch.__version__); print('torch_cuda=', torch.version.cuda); print('avail=', torch.cuda.is_available())"
+
 MOUNTS["/root/.cache"]="${WORKSPACE}/data/.cache"
 MOUNTS["${WORKSPACE}/input"]="${WORKSPACE}/data/config/input"
 MOUNTS["/comfyui/output"]="${WORKSPACE}/output"
@@ -28,5 +37,4 @@ if [ -f "${WORKSPACE}/data/config/startup.sh" ]; then
   popd
 fi
 
-. ${VENV_PATH}/bin/activate
 exec "$@"

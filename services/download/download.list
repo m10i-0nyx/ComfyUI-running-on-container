@@ -16,6 +16,3 @@
 ## https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0-turbo
 #https://huggingface.co/tencent/Hunyuan3D-2/resolve/main/hunyuan3d-dit-v2-0-turbo/model.fp16.safetensors?download=true
 #  out=checkpoints/hunyuan3d-dit-v2-turbo.safetensors
-
-https://chimpo.info/uploaded/oneObsession_v18.safetensors
-    out=checkpoints/oneObsession_v18.safetensors

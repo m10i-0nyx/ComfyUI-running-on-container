@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1
-FROM docker.io/nvidia/cuda:12.9.1-devel-ubuntu24.04 AS builder
-ARG COMFYUI_TAG=v0.4.0
+FROM docker.io/nvidia/cuda:13.1.0-devel-ubuntu24.04 AS builder
 ENV COMFYUI_DIR=/comfyui
 ENV UV_PYTHON_INSTALL_DIR=/opt/python
-ENV VENV_PATH=/opt/venv
+ENV VENV_PATH=/opt/python-venv
 ENV PATH="/root/.local/bin:${VENV_PATH}/bin:${PATH}"
+ARG COMFYUI_TAG
 
 RUN set -eux \
     && apt-get update \
@@ -12,16 +12,14 @@ RUN set -eux \
     && apt-get install -y --no-install-recommends git ninja-build curl \
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && uv venv -p 3.13 ${VENV_PATH} \
-    && . ${VENV_PATH}/bin/activate \
-    && uv pip install nvidia-ml-py
+    && . ${VENV_PATH}/bin/activate
 
 RUN set -eux \
-    # ComfyUI-Manager をクローン,　依存関係をインストール
+    # ComfyUI をクローン,　依存関係をインストール
     && git clone https://github.com/comfyanonymous/ComfyUI.git ${COMFYUI_DIR} \
     && cd ${COMFYUI_DIR} \
+    && if [ -z "${COMFYUI_TAG}" ]; then export COMFYUI_TAG="$(git describe --tags --abbrev=0)"; fi \
     && git checkout tags/${COMFYUI_TAG} \
-    && sed -i 's/^torch$/torch==2.7.1/' requirements.txt \
-    && sed -i '/^pynvml=?.*$/d' requirements.txt \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
@@ -30,7 +28,6 @@ RUN set -eux \
     && git clone -b main --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git ComfyUI-Manager \
     && cd ComfyUI-Manager \
     && git pull --force origin main \
-    && sed -i '/^pynvml=?.*$/d' requirements.txt \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
@@ -38,7 +35,6 @@ RUN set -eux \
     && cd ${COMFYUI_DIR}/custom_nodes \
     && git clone https://github.com/ltdrdata/ComfyUI-Impact-Pack.git ComfyUI-Impact-Pack \
     && cd ComfyUI-Impact-Pack \
-    && sed -i '/^pynvml=?.*$/d' requirements.txt \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
@@ -46,7 +42,6 @@ RUN set -eux \
     && cd ${COMFYUI_DIR}/custom_nodes \
     && git clone https://github.com/rgthree/rgthree-comfy.git rgthree-comfy \
     && cd rgthree-comfy \
-    && sed -i '/^pynvml=?.*$/d' requirements.txt \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
@@ -54,7 +49,6 @@ RUN set -eux \
     && cd ${COMFYUI_DIR}/custom_nodes \
     && git clone https://github.com/crystian/comfyui-crystools.git comfyui-crystools \
     && cd comfyui-crystools \
-    && sed -i '/^pynvml=?.*$/d' requirements.txt \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
@@ -63,43 +57,40 @@ RUN set -eux \
     && git clone -b main --depth 1 https://github.com/cubiq/ComfyUI_essentials.git ComfyUI-essentials \
     && cd ComfyUI-essentials \
     && git pull --force origin main \
-    && sed -i '/^pynvml=?.*$/d' requirements.txt \
     && uv pip install -r requirements.txt
 
-RUN set -eux \
-    # ComfyUI-Hunyuan3DWrapper をクローン,　依存関係をインストール
-    && cd ${COMFYUI_DIR}/custom_nodes/ \
-    && git clone -b main --depth 1 https://github.com/kijai/ComfyUI-Hunyuan3DWrapper.git ComfyUI-Hunyuan3DWrapper \
-    && cd ComfyUI-Hunyuan3DWrapper \
-    && git pull --force origin main \
-    && sed -i '/^pynvml=?.*$/d' requirements.txt \
-    && uv pip install -r requirements.txt \
-    # Rasterizer, to build and install
-    && cd ${COMFYUI_DIR}/custom_nodes/ComfyUI-Hunyuan3DWrapper/hy3dgen/texgen/custom_rasterizer \
-    && uv pip install --no-build-isolation . \
-    # For the mesh_processor extension install
-    && cd ${COMFYUI_DIR}/custom_nodes/ComfyUI-Hunyuan3DWrapper/hy3dgen/texgen/differentiable_renderer \
-    && uv pip install --no-build-isolation . \
-    # Boundary Preserving Transform install
-    && cd ${COMFYUI_DIR}/custom_nodes/ComfyUI-Hunyuan3DWrapper/hy3dgen/shapegen/bpt \
-    && sed -i '/^pynvml=?.*$/d' requirements.txt \
-    && uv pip install -r requirements.txt
+#RUN set -eux \
+#    # ComfyUI-Hunyuan3DWrapper をクローン,　依存関係をインストール
+#    && cd ${COMFYUI_DIR}/custom_nodes/ \
+#    && git clone -b main --depth 1 https://github.com/kijai/ComfyUI-Hunyuan3DWrapper.git ComfyUI-Hunyuan3DWrapper \
+#    && cd ComfyUI-Hunyuan3DWrapper \
+#    && git pull --force origin main \
+#    && uv pip install -r requirements.txt \
+#    # Rasterizer, to build and install
+#    && cd ${COMFYUI_DIR}/custom_nodes/ComfyUI-Hunyuan3DWrapper/hy3dgen/texgen/custom_rasterizer \
+#    && uv pip install --no-build-isolation . \
+#    # For the mesh_processor extension install
+#    && cd ${COMFYUI_DIR}/custom_nodes/ComfyUI-Hunyuan3DWrapper/hy3dgen/texgen/differentiable_renderer \
+#    && uv pip install --no-build-isolation . \
+#    # Boundary Preserving Transform install
+#    && cd ${COMFYUI_DIR}/custom_nodes/ComfyUI-Hunyuan3DWrapper/hy3dgen/shapegen/bpt \
+#    && uv pip install -r requirements.txt
 
-RUN set -eux \
-    # Xatlas Upgrade
-    && cd /tmp \
-    && uv pip uninstall xatlas \
-    && git clone --recursive https://github.com/mworchel/xatlas-python.git \
-    && cd ./xatlas-python/extern \
-    && rm -rf xatlas \
-    && git clone --recursive https://github.com/jpcy/xatlas.git \
-    && cd ./xatlas/source/xatlas \
-    # 6774行目の「#if 0」を「//#if 0」に
-    && sed -i '6774s/^#if 0$/\/\/#if 0/' xatlas.cpp \
-    # 6778行目の「#endif」を「//#endif」に
-    && sed -i '6778s/^#endif$/\/\/#endif/' xatlas.cpp \
-    && cd /tmp/xatlas-python/ \
-    && uv pip install .
+#RUN set -eux \
+#    # Xatlas Upgrade
+#    && cd /tmp \
+#    && uv pip uninstall xatlas \
+#    && git clone --recursive https://github.com/mworchel/xatlas-python.git \
+#    && cd ./xatlas-python/extern \
+#    && rm -rf xatlas \
+#    && git clone --recursive https://github.com/jpcy/xatlas.git \
+#    && cd ./xatlas/source/xatlas \
+#    # 6774行目の「#if 0」を「//#if 0」に
+#    && sed -i '6774s/^#if 0$/\/\/#if 0/' xatlas.cpp \
+#    # 6778行目の「#endif」を「//#endif」に
+#    && sed -i '6778s/^#endif$/\/\/#endif/' xatlas.cpp \
+#    && cd /tmp/xatlas-python/ \
+#    && uv pip install .
 
 RUN set -eux \
     && uv pip uninstall pynvml \
@@ -107,10 +98,10 @@ RUN set -eux \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-FROM docker.io/nvidia/cuda:12.9.1-runtime-ubuntu24.04
+FROM docker.io/nvidia/cuda:13.1.0-runtime-ubuntu24.04
 ENV COMFYUI_DIR=/comfyui
-ENV VENV_PATH=/opt/venv
 ENV UV_PYTHON_INSTALL_DIR=/opt/python
+ENV VENV_PATH=/opt/python-venv
 ENV PATH="/root/.local/bin:${VENV_PATH}/bin:${PATH}"
 
 RUN set -eux \
@@ -129,7 +120,7 @@ COPY . /container/
 RUN chmod u+x /container/entrypoint.sh \
     && cp /container/extra_model_paths.yaml ${COMFYUI_DIR} \
     && mkdir -p ${COMFYUI_DIR}/custom_nodes/ \
-    && mv /container/output_httpserver.py ${COMFYUI_DIR}/custom_nodes/ \
+    && mv /container/*.py ${COMFYUI_DIR}/custom_nodes/ \
     && chmod a+x ${COMFYUI_DIR}/custom_nodes/*.py
 
 # NVIDIAランタイムの設定
