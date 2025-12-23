@@ -12,6 +12,7 @@ export DOWNLOAD_DIR="/workspace/data/models"
 rm -f "${DOWNLOAD_LIST}" >/dev/null 2>&1
 rm -f "${CHECKSUM_LIST}" >/dev/null 2>&1
 
+# Wan2.2 Models
 if [ "${ENABLED_WAN2_MODELS_DOWNLOAD:-"false"}" = "true" ] || [ "${ENABLED_WAN2_MODELS_DOWNLOAD:-"0"}" = "1" ]; then
     echo "WAN2 Models download enabled."
     cat /container/preset_lists/download_wan2.txt >> "${DOWNLOAD_LIST}"
@@ -21,6 +22,17 @@ if [ "${ENABLED_WAN2_MODELS_CHECKSUM:-"false"}" = "true" ] || [ "${ENABLED_WAN2_
     cat /container/preset_lists/checksum_wan2.txt >> "${CHECKSUM_LIST}"
 fi
 
+# FLUX.2 Models
+if [ "${ENABLED_FLUX2_MODELS_DOWNLOAD:-"false"}" = "true" ] || [ "${ENABLED_FLUX2_MODELS_DOWNLOAD:-"0"}" = "1" ]; then
+    echo "FLUX.2 Models download enabled."
+    cat /container/preset_lists/download_flux2.txt >> "${DOWNLOAD_LIST}"
+fi
+if [ "${ENABLED_FLUX2_MODELS_CHECKSUM:-"false"}" = "true" ] || [ "${ENABLED_FLUX2_MODELS_CHECKSUM:-"0"}" = "1" ]; then
+    echo "FLUX.2 Models checksum verification enabled."
+    cat /container/preset_lists/checksum_flux2.txt >> "${CHECKSUM_LIST}"
+fi
+
+# Custom user lists
 if [ -f "${DOWNLOAD_DIR}/download_list.txt" ]; then
     echo "Custom download list found in download directory. Appending to download list."
     cat "${DOWNLOAD_DIR}/download_list.txt" >> "${DOWNLOAD_LIST}"
