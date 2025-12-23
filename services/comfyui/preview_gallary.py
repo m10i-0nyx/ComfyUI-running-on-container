@@ -149,7 +149,7 @@ class ThreadedHTTPServer(threading.Thread):
   </style>
 </head>
 <body>
-  <h1>ComfyUI Output Gallery</h1>
+  <h1>ComfyUI Preview Gallery</h1>
   <div class="meta">Total images: {total} — Page {page} / {total_pages}</div>
   <div class="meta">{download_link}</div>
   <div class="pager">{nav_html}</div>
@@ -211,7 +211,7 @@ class ThreadedHTTPServer(threading.Thread):
         handler_factory = lambda *args, **kwargs: GalleryHTTPRequestHandler(*args, directory=self.directory, **kwargs)
 
         with socketserver.TCPServer(("0.0.0.0", self.port), handler_factory) as httpd:
-            print(f"[ComfyUI-Output-HTTPServer] Serving '{self.directory}' at http://127.0.0.1:{self.port}")
+            print(f"[ComfyUI-Preview-Gallery] Serving '{self.directory}' at http://127.0.0.1:{self.port}")
             httpd.serve_forever()
 
 
