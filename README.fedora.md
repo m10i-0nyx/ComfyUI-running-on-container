@@ -161,7 +161,7 @@ cd /opt/comfyui-running-on-container
 chmod +x ./*.sh
 
 # 必要に応じて作成(.envファイル)
-cp env .env
+cp env.sample .env
 # vi .env で環境変数を変更可能
 
 # 必要に応じて実行
