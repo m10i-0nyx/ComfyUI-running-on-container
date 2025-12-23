@@ -1,2 +1,8 @@
 # ComfyUI Version
+# default: latest
 #COMFYUI_TAG=v0.5.1
+
+# Download Wan2.2 Models
+# default: false
+ENABLED_WAN2_MODELS_DOWNLOAD="false"
+ENABLED_WAN2_MODELS_CHECKSUM="false"

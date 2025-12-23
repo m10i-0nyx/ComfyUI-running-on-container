@@ -1,0 +1,9 @@
+FROM docker.io/alpine:3.23
+
+RUN apk add --no-cache bash parallel aria2
+COPY entrypoint.sh /container/entrypoint.sh
+COPY preset_lists/*.txt /container/preset_lists/
+RUN chmod +x /container/entrypoint.sh
+
+ENTRYPOINT ["/container/entrypoint.sh"]
+CMD ["bash"]

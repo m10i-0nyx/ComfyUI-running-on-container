@@ -1,6 +1,0 @@
-FROM docker.io/alpine:3
-
-RUN apk update && apk add bash parallel aria2
-COPY . /container
-RUN chmod +x /container/download.sh
-ENTRYPOINT ["/container/download.sh"]

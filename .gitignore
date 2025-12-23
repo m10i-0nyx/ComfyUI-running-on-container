@@ -6,3 +6,6 @@
 
 data/**
 output/**
+
+# Environment variables file
+.env
