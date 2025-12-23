@@ -1,5 +1,10 @@
 #!/bin/bash
 
+set -Eeuo pipefail
+
+# ComfyUI tag initial value
+export COMFYUI_TAG=""
+
 if [ -f env ]; then
   set -a
   source ./env
@@ -28,4 +33,4 @@ podman run -d --replace \
   --volume "$(pwd)/output:/workspace/output" \
   --device "nvidia.com/gpu=all" \
   -e CLI_ARGS="${ARGS}" \
-  localhost/comfyui:${COMFYUI_TAG}
+  localhost/comfyui:${COMFYUI_TAG:-"latest"}
