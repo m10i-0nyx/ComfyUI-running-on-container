@@ -11,13 +11,13 @@ from urllib.parse import urlparse, parse_qs
 # -----------------------------
 # 設定
 # -----------------------------
-PORT = 8888
+PORT = int(os.environ.get("COMFYUI_PREVIEW_GALLERY_PORT", 8888))
 
 OUTPUT_DIR = os.path.abspath(
     "/workspace/output"  # ComfyUI の出力フォルダパスに合わせる
 )
 
-PAGE_SIZE = 50  # 1ページあたりの画像数（0で全件表示）
+PAGE_SIZE = int(os.environ.get("COMFYUI_PREVIEW_GALLERY_PAGE_SIZE", 10))  # 1ページあたりの画像数（0で全件表示）
 IMAGE_EXTS = ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.mp4', '.avi', '.webm')
 
 # -----------------------------
@@ -226,10 +226,9 @@ def start_server_if_needed():
     server.start()
     start_server_if_needed.server_started = True  # type: ignore
 
-
-# モジュールインポート時に実行
-start_server_if_needed()
-
+if os.environ.get("ENABLED_COMFYUI_PREVIEW_GALLERY", "false") == "true":
+    # モジュールインポート時に実行
+    start_server_if_needed()
 
 # -----------------------------
 # ダミーノード（表示用）
