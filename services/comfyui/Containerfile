@@ -12,7 +12,8 @@ RUN set -eux \
     && apt-get install -y --no-install-recommends git ninja-build curl \
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && uv venv -p 3.13 ${VENV_PATH} \
-    && . ${VENV_PATH}/bin/activate
+    && . ${VENV_PATH}/bin/activate \
+    && uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130
 
 RUN set -eux \
     # ComfyUI をクローン,　依存関係をインストール
