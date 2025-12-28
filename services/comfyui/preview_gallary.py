@@ -1,12 +1,12 @@
-import os
-import threading
-import http.server
-import socketserver
-import math
-import tempfile
-import zipfile
 from urllib.parse import urlparse, parse_qs
-
+import http.server
+import math
+import os
+import socketserver
+import tempfile
+import threading
+import time
+import zipfile
 
 # -----------------------------
 # 設定
@@ -34,10 +34,22 @@ class ThreadedHTTPServer(threading.Thread):
         os.chdir(self.directory)
 
         class GalleryHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+            images_cache: list[tuple[str, str]] = []
+            images_cache_time: float = 0.0
+
             def __init__(self, *args, directory=None, **kwargs):
                 super().__init__(*args, directory=directory, **kwargs)
 
             def collect_all_images(self):
+                now = time.time()
+                TTL = 60  # 秒
+
+                cached = self.images_cache
+                cached_time = self.images_cache_time
+
+                if cached is not None and (now - cached_time) < TTL:
+                    return cached
+
                 imgs = []
                 for root, _, files in os.walk(os.getcwd()):
                     for f in files:
@@ -45,8 +57,18 @@ class ThreadedHTTPServer(threading.Thread):
                             full = os.path.join(root, f)
                             rel = os.path.relpath(full, os.getcwd())
                             imgs.append((full, rel))
-                # 名前降順（ファイル名基準）でソート
-                imgs.sort(key=lambda t: t[1], reverse=True)
+
+                def _ctime(path):
+                    try:
+                        return os.path.getctime(path)
+                    except Exception:
+                        return 0
+
+                imgs.sort(key=lambda t: _ctime(t[0]), reverse=True)
+
+                self.images_cache = imgs
+                self.images_cache_time = now
+
                 return imgs
 
             def send_zip_all_images(self):
@@ -75,7 +97,7 @@ class ThreadedHTTPServer(threading.Thread):
                     size = os.path.getsize(tmp_path)
                     self.send_response(200)
                     self.send_header('Content-Type', 'application/zip')
-                    self.send_header('Content-Disposition', 'attachment; filename="comfyui_output_gallery.zip"')
+                    self.send_header('Content-Disposition', 'attachment; filename="comfyui_preview_gallery.zip"')
                     self.send_header('Content-Length', str(size))
                     self.end_headers()
 
@@ -136,7 +158,7 @@ class ThreadedHTTPServer(threading.Thread):
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>ComfyUI Output Gallery</title>
+  <title>ComfyUI Preview Gallery</title>
   <style>
     body{{font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding:16px;}}
     .meta{{margin-bottom:8px;color:#666;}}
@@ -233,7 +255,7 @@ if os.environ.get("ENABLED_COMFYUI_PREVIEW_GALLERY", "false") == "true":
 # -----------------------------
 # ダミーノード（表示用）
 # -----------------------------
-class OutputFolderHTTPServerAuto:
+class PreviewGalleryHTTPServerAuto:
     @classmethod
     def INPUT_TYPES(cls):
         return {"required": {}}
@@ -247,5 +269,5 @@ class OutputFolderHTTPServerAuto:
 
 
 NODE_CLASS_MAPPINGS = {
-    "OutputFolderHTTPServerAuto": OutputFolderHTTPServerAuto
+    "PreviewGalleryHTTPServerAuto": PreviewGalleryHTTPServerAuto
 }

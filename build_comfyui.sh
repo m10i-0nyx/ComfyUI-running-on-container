@@ -16,5 +16,4 @@ podman build -t comfyui:${COMFYUI_TAG:-"latest"} \
   --force-rm \
   --build-arg "COMFYUI_TAG=${COMFYUI_TAG}" \
   --device "nvidia.com/gpu=all" \
-  --volume "$(pwd)/data:/workspace/data" \
-  ./services/comfyui/
+  ./services/comfyui

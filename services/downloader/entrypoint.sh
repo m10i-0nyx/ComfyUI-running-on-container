@@ -2,12 +2,13 @@
 
 set -Eeuo pipefail
 
-mkdir -p /workspace/data/.cache
-mkdir -p /workspace/data/models/{checkpoints,clip,clip_vision,controlnet,diffusion_models,gligen,hypernetworks,loras,text_encoders,upscale,vae}
+mkdir -p ${WORKSPACE:-"/workspace"}/data/.cache
+# Make sure workspace directories exist
+mkdir -p ${WORKSPACE:-"/workspace"}/data/models/{checkpoints,clip_vision,configs,controlnet,diffusion_models,unet,hypernetworks,loras,text_encoders,upscale_models,vae,audio_encoders,model_patches}
 
 export DOWNLOAD_LIST="/container/download_list.txt"
 export CHECKSUM_LIST="/container/checksum_list.txt"
-export DOWNLOAD_DIR="/workspace/data/models"
+export DOWNLOAD_DIR="${WORKSPACE:-"/workspace"}/data/models"
 
 rm -f "${DOWNLOAD_LIST}" >/dev/null 2>&1
 rm -f "${CHECKSUM_LIST}" >/dev/null 2>&1
@@ -33,13 +34,13 @@ if [ "${ENABLED_FLUX2_MODELS_CHECKSUM:-"false"}" = "true" ] || [ "${ENABLED_FLUX
 fi
 
 # Custom user lists
-if [ -f "${DOWNLOAD_DIR}/download_list.txt" ]; then
+if [ -f "${WORKSPACE:-"/workspace"}/download_list.txt" ]; then
     echo "Custom download list found in download directory. Appending to download list."
-    cat "${DOWNLOAD_DIR}/download_list.txt" >> "${DOWNLOAD_LIST}"
+    cat "${WORKSPACE:-"/workspace"}/download_list.txt" >> "${DOWNLOAD_LIST}"
 fi
-if [ -f "${DOWNLOAD_DIR}/checksum_list.txt" ]; then
+if [ -f "${WORKSPACE:-"/workspace"}/checksum_list.txt" ]; then
     echo "Custom checksum list found in download directory. Appending to checksum list."
-    cat "${DOWNLOAD_DIR}/checksum_list.txt" >> "${CHECKSUM_LIST}"
+    cat "${WORKSPACE:-"/workspace"}/checksum_list.txt" >> "${CHECKSUM_LIST}"
 fi
 
 if [ -f "${DOWNLOAD_LIST}" ]; then

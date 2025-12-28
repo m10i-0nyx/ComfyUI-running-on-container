@@ -26,39 +26,36 @@ RUN set -eux \
 RUN set -eux \
     # ComfyUI-Manager をクローン,　依存関係をインストール
     && cd ${COMFYUI_DIR}/custom_nodes/ \
-    && git clone -b main --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git ComfyUI-Manager \
-    && cd ComfyUI-Manager \
+    && git clone -b main --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git comfyui-manager \
+    && cd comfyui-manager \
     && git pull --force origin main \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
     # ComfyUI-Impact-Pack をクローン,　依存関係をインストール
     && cd ${COMFYUI_DIR}/custom_nodes \
-    && git clone https://github.com/ltdrdata/ComfyUI-Impact-Pack.git ComfyUI-Impact-Pack \
-    && cd ComfyUI-Impact-Pack \
+    && git clone -b Main --depth 1 https://github.com/ltdrdata/ComfyUI-Impact-Pack.git comfyui-impact-pack \
+    && cd comfyui-impact-pack \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
     # rgthree-comfy をクローン,　依存関係をインストール
     && cd ${COMFYUI_DIR}/custom_nodes \
-    && git clone https://github.com/rgthree/rgthree-comfy.git rgthree-comfy \
+    && git clone -b main --depth 1 https://github.com/rgthree/rgthree-comfy.git rgthree-comfy \
     && cd rgthree-comfy \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
     # comfyui-crystools をクローン,　依存関係をインストール
     && cd ${COMFYUI_DIR}/custom_nodes \
-    && git clone https://github.com/crystian/comfyui-crystools.git comfyui-crystools \
+    && git clone -b main --depth 1 https://github.com/crystian/comfyui-crystools.git comfyui-crystools \
     && cd comfyui-crystools \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
-    # ComfyUI_essentials をクローン,　依存関係をインストール
-    && cd ${COMFYUI_DIR}/custom_nodes/ \
-    && git clone -b main --depth 1 https://github.com/cubiq/ComfyUI_essentials.git ComfyUI-essentials \
-    && cd ComfyUI-essentials \
-    && git pull --force origin main \
-    && uv pip install -r requirements.txt
+    # ComfyUI-Autocomplete-Plus ノードをインストール
+    && cd ${COMFYUI_DIR}/custom_nodes \
+    && git clone -b main --depth 1 https://github.com/newtextdoc1111/ComfyUI-Autocomplete-Plus.git comfyui-autocomplete-plus
 
 #RUN set -eux \
 #    # ComfyUI-Hunyuan3DWrapper をクローン,　依存関係をインストール
@@ -103,7 +100,6 @@ FROM docker.io/nvidia/cuda:13.1.0-runtime-ubuntu24.04
 ENV COMFYUI_DIR=/comfyui
 ENV UV_PYTHON_INSTALL_DIR=/opt/python
 ENV VENV_PATH=/opt/python-venv
-ENV PATH="/root/.local/bin:${VENV_PATH}/bin:${PATH}"
 
 RUN set -eux \
     && apt-get update \

@@ -14,6 +14,7 @@ podman build -t downloader:latest \
 # モデルをダウンロードするためのコンテナを実行
 podman run -it --rm \
   --name downloader \
+  --env "WORKSPACE=/workspace" \
   --env "ENABLED_WAN2_MODELS_DOWNLOAD=${ENABLED_WAN2_MODELS_DOWNLOAD:-"false"}" \
   --env "ENABLED_WAN2_MODELS_CHECKSUM=${ENABLED_WAN2_MODELS_CHECKSUM:-"false"}" \
   --env "ENABLED_FLUX2_MODELS_DOWNLOAD=${ENABLED_FLUX2_MODELS_DOWNLOAD:-"false"}" \
