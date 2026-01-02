@@ -11,12 +11,17 @@ if [ -f ./.env ]; then
   set +a
 fi
 
-ARGS="--force-fp16"
-# --force-fp32 が引数に含まれている場合、ARGSに"--force-fp32"をセット
+ARGS=""
 for arg in "$@"; do
+  if [ "$arg" = "--force-fp16" ]; then
+    # --force-fp16 が引数に含まれている場合、ARGSに"--force-fp16"をセット
+    ARGS="--force-fp16"
+    continue
+  fi
   if [ "$arg" = "--force-fp32" ]; then
+    # --force-fp32 が引数に含まれている場合、ARGSに"--force-fp32"をセット
     ARGS="--force-fp32"
-    break
+    continue
   fi
 done
 
