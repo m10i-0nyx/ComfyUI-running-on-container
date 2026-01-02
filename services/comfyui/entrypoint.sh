@@ -17,6 +17,14 @@ echo "Python: $(which python) ($(python --version))"
 echo "===== torch info ====="
 python -c "import torch; print('torch=', torch.__version__); print('torch_cuda=', torch.version.cuda); print('avail=', torch.cuda.is_available())"
 echo "==================================="
+python -c "import torch; print('torch=', torch.__version__); print('torch_cuda=', torch.version.cuda); print('avail=', torch.cuda.is_available())"
+
+export TORCH_CUDA_AVAILABLE=$(python -c "import torch; print(torch.cuda.is_available())")
+if [ "${TORCH_CUDA_AVAILABLE}" = "False" ]; then
+    echo "CUDA is not available. Dropping to shell for debugging."
+    exec /bin/bash || exec /bin/sh
+fi
+
 
 declare -A MOUNTS
 MOUNTS["/root/.cache"]="${WORKSPACE}/data/.cache"
