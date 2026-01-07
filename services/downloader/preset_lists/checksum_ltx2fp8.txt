@@ -1,0 +1,2 @@
+5c869a1e4a6e781fc1077e75a26fbf4282b48d6a4e95f7e64629eda9e38655a9  /workspace/data/models/checkpoints/LTXVideo/ltx-2-19b-dev-fp8.safetensors
+05087e0db71ecbc622442279519e24283e64f7d2d2bb33d7a96f4320087533c8  /workspace/data/models/checkpoints/LTXVideo/ltx-2-19b-distilled-fp8.safetensors

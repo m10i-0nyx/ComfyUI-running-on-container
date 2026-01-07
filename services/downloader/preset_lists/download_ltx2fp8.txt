@@ -1,0 +1,5 @@
+https://huggingface.co/Lightricks/LTX-2/resolve/main/ltx-2-19b-dev-fp8.safetensors
+    out=checkpoints/LTXVideo/ltx-2-19b-dev-fp8.safetensors
+
+https://huggingface.co/Lightricks/LTX-2/resolve/main/ltx-2-19b-distilled-fp8.safetensors
+    out=checkpoints/LTXVideo/ltx-2-19b-distilled-fp8.safetensors
