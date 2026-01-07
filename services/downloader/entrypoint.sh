@@ -14,34 +14,53 @@ rm -f "${DOWNLOAD_LIST}" >/dev/null 2>&1
 rm -f "${CHECKSUM_LIST}" >/dev/null 2>&1
 
 # Wan2.2 Models
-if [ "${ENABLED_WAN2_MODELS_DOWNLOAD:-"false"}" = "true" ] || [ "${ENABLED_WAN2_MODELS_DOWNLOAD:-"0"}" = "1" ]; then
+if [ -n "${ENABLED_WAN2_MODELS_DOWNLOAD:-''}" ] && [ "${ENABLED_WAN2_MODELS_DOWNLOAD:-'false'}" = "true" ]; then
     echo "WAN2 Models download enabled."
     cat /container/preset_lists/download_wan2.txt >> "${DOWNLOAD_LIST}"
 fi
-if [ "${ENABLED_WAN2_MODELS_CHECKSUM:-"false"}" = "true" ] || [ "${ENABLED_WAN2_MODELS_CHECKSUM:-"0"}" = "1" ]; then
+if [ -n "${ENABLED_WAN2_MODELS_CHECKSUM:-''}" ] && [ "${ENABLED_WAN2_MODELS_CHECKSUM:-'false'}" = "true" ]; then
     echo "WAN2 Models checksum verification enabled."
     cat /container/preset_lists/checksum_wan2.txt >> "${CHECKSUM_LIST}"
 fi
 
 # FLUX.2 Models
-if [ "${ENABLED_FLUX2_MODELS_DOWNLOAD:-"false"}" = "true" ] || [ "${ENABLED_FLUX2_MODELS_DOWNLOAD:-"0"}" = "1" ]; then
+if [ -n "${ENABLED_FLUX2_MODELS_DOWNLOAD:-''}" ] && [ "${ENABLED_FLUX2_MODELS_DOWNLOAD:-'false'}" = "true" ]; then
     echo "FLUX.2 Models download enabled."
     cat /container/preset_lists/download_flux2.txt >> "${DOWNLOAD_LIST}"
 fi
-if [ "${ENABLED_FLUX2_MODELS_CHECKSUM:-"false"}" = "true" ] || [ "${ENABLED_FLUX2_MODELS_CHECKSUM:-"0"}" = "1" ]; then
+if [ -n "${ENABLED_FLUX2_MODELS_CHECKSUM:-''}" ] && [ "${ENABLED_FLUX2_MODELS_CHECKSUM:-'false'}" = "true" ]; then
     echo "FLUX.2 Models checksum verification enabled."
     cat /container/preset_lists/checksum_flux2.txt >> "${CHECKSUM_LIST}"
 fi
 
 # Qwen-Image Models
-if [ "${ENABLED_QWENIMAGE_MODELS_DOWNLOAD:-"false"}" = "true" ] || [ "${ENABLED_QWENIMAGE_MODELS_DOWNLOAD:-"0"}" = "1" ]; then
+if [ -n "${ENABLED_QWENIMAGE_MODELS_DOWNLOAD:-''}" ] && [ "${ENABLED_QWENIMAGE_MODELS_DOWNLOAD:-'false'}" = "true" ]; then
     echo "Qwen-Image Models download enabled."
     cat /container/preset_lists/download_qwenimage.txt >> "${DOWNLOAD_LIST}"
 fi
-if [ "${ENABLED_QWENIMAGE_MODELS_CHECKSUM:-"false"}" = "true" ] || [ "${ENABLED_QWENIMAGE_MODELS_CHECKSUM:-"0"}" = "1" ]; then
+if [ -n "${ENABLED_QWENIMAGE_MODELS_CHECKSUM:-''}" ] && [ "${ENABLED_QWENIMAGE_MODELS_CHECKSUM:-'false'}" = "true" ]; then
     echo "Qwen-Image Models checksum verification enabled."
     cat /container/preset_lists/checksum_qwenimage.txt >> "${CHECKSUM_LIST}"
 fi
+
+# LTX-2 Models
+if [ -n "${ENABLED_LTX2_MODELS_DOWNLOAD:-''}" ] && [ "${ENABLED_LTX2_MODELS_DOWNLOAD:-'false'}" = "true" ]; then
+    echo "LTX-2 Models download enabled."
+    cat /container/preset_lists/download_ltx2.txt >> "${DOWNLOAD_LIST}"
+fi
+if [ -n "${ENABLED_LTX2_MODELS_CHECKSUM:-''}" ] && [ "${ENABLED_LTX2_MODELS_CHECKSUM:-'false'}" = "true" ]; then
+    echo "LTX-2 Models checksum verification enabled."
+    cat /container/preset_lists/checksum_ltx2.txt >> "${CHECKSUM_LIST}"
+fi
+if [ -n "${ENABLED_LTX2FP8_MODELS_DOWNLOAD:-''}" ] && [ "${ENABLED_LTX2FP8_MODELS_DOWNLOAD:-'false'}" = "true" ]; then
+    echo "LTX-2(FP8) Models download enabled."
+    cat /container/preset_lists/download_ltx2fp8.txt >> "${DOWNLOAD_LIST}"
+fi
+if [ -n "${ENABLED_LTX2FP8_MODELS_CHECKSUM:-''}" ] && [ "${ENABLED_LTX2FP8_MODELS_CHECKSUM:-'false'}" = "true" ]; then
+    echo "LTX-2(FP8) Models checksum verification enabled."
+    cat /container/preset_lists/checksum_ltx2fp8.txt >> "${CHECKSUM_LIST}"
+fi
+
 
 # Custom user lists
 if [ -f "${WORKSPACE:-"/workspace"}/download_list.txt" ]; then

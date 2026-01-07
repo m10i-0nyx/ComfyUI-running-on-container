@@ -21,15 +21,17 @@ RUN set -eux \
     && cd ${COMFYUI_DIR} \
     && if [ -z "${COMFYUI_TAG}" ]; then export COMFYUI_TAG="$(git describe --tags --abbrev=0)"; fi \
     && git checkout tags/${COMFYUI_TAG} \
-    && uv pip install -r requirements.txt
+    && uv pip install -r requirements.txt \
+    && uv pip install -r manager_requirements.txt
 
-RUN set -eux \
-    # ComfyUI-Manager をクローン,　依存関係をインストール
-    && cd ${COMFYUI_DIR}/custom_nodes/ \
-    && git clone -b main --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git comfyui-manager \
-    && cd comfyui-manager \
-    && git pull --force origin main \
-    && uv pip install -r requirements.txt
+#RUN set -eux \
+#    # ComfyUI-Manager をクローン,　依存関係をインストール
+#    # 公式にMergeされているためコメントアウト
+#    && cd ${COMFYUI_DIR}/custom_nodes/ \
+#    && git clone -b main --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git comfyui-manager \
+#    && cd comfyui-manager \
+#    && git pull --force origin main \
+#    && uv pip install -r requirements.txt
 
 RUN set -eux \
     # ComfyUI-Impact-Pack をクローン,　依存関係をインストール
@@ -127,7 +129,7 @@ ENV NVIDIA_DISABLE_REQUIRE=1
 
 ENV WORKSPACE="/workspace"
 ENV PYTHONPATH="${PYTHONPATH}:${PWD}"
-ENV CLI_ARGS=""
+ENV CLI_ARGS="--dont-print-server --enable-manager"
 EXPOSE 8188 8888
 ENTRYPOINT ["/container/entrypoint.sh"]
 CMD python3 -u main.py --listen --port 8188 ${CLI_ARGS}
