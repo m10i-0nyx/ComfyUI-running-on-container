@@ -24,27 +24,11 @@ RUN set -eux \
     && uv pip install -r requirements.txt \
     && uv pip install -r manager_requirements.txt
 
-#RUN set -eux \
-#    # ComfyUI-Manager をクローン,　依存関係をインストール
-#    # 公式にMergeされているためコメントアウト
-#    && cd ${COMFYUI_DIR}/custom_nodes/ \
-#    && git clone -b main --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git comfyui-manager \
-#    && cd comfyui-manager \
-#    && git pull --force origin main \
-#    && uv pip install -r requirements.txt
-
 RUN set -eux \
     # ComfyUI-Impact-Pack をクローン,　依存関係をインストール
     && cd ${COMFYUI_DIR}/custom_nodes \
     && git clone -b Main --depth 1 https://github.com/ltdrdata/ComfyUI-Impact-Pack.git comfyui-impact-pack \
     && cd comfyui-impact-pack \
-    && uv pip install -r requirements.txt
-
-RUN set -eux \
-    # rgthree-comfy をクローン,　依存関係をインストール
-    && cd ${COMFYUI_DIR}/custom_nodes \
-    && git clone -b main --depth 1 https://github.com/rgthree/rgthree-comfy.git rgthree-comfy \
-    && cd rgthree-comfy \
     && uv pip install -r requirements.txt
 
 RUN set -eux \
