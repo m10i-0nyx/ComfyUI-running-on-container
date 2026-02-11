@@ -11,7 +11,7 @@ mkdir -p ${WORKSPACE}/data/models/{checkpoints,clip_vision,configs,controlnet,di
 declare -A MOUNTS
 
 MOUNTS["/root/.cache"]="${WORKSPACE}/data/.cache"
-MOUNTS["${WORKSPACE}/input"]="${WORKSPACE}/data/input"
+MOUNTS["/comfyui/input"]="${WORKSPACE}/data/input"
 MOUNTS["/comfyui/output"]="${WORKSPACE}/output"
 
 for to_path in "${!MOUNTS[@]}"; do

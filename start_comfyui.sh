@@ -33,7 +33,8 @@ ARGS="${ARGS} --dont-print-server --enable-manager"
 podman run -d --replace \
   --name comfyui \
   -p 8188:8188 \
-  --volume "$(pwd)/data:/workspace" \
+  --volume "$(pwd)/data:/workspace/data" \
+  --volume "$(pwd)/output:/workspace/output" \
   --device "nvidia.com/gpu=all" \
   --env NUMBER_OF_GPUS=1 \
   --env CLI_ARGS="${ARGS}" \
