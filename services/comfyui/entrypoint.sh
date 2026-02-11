@@ -30,7 +30,7 @@ done
 source ${VENV_PATH}/bin/activate
 
 # Upgrade torch to latest stable
-uv pip install --upgrade "torch>=2.10.0" torchvision torchaudio
+uv pip install --upgrade "torch>=2.10.0" torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130
 
 # --- 3. Print system info ---
 echo "===== NVIDIA info ====="
