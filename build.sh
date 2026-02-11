@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 # ComfyUI tag initial value
-export COMFYUI_TAG=""
+export COMFYUI_TAG="v0.12.3"
 
 if [ -f ./.env ]; then
   set -a

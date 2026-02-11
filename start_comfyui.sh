@@ -25,18 +25,17 @@ for arg in "$@"; do
   fi
 done
 
-# dont-print-server オプションを追加
-ARGS="${ARGS} --dont-print-server"
+# dont-print-server / enable-manager オプションを追加
+ARGS="${ARGS} --dont-print-server --enable-manager"
 
 # ComfyUIのコンテナを実行
 # WSL2起動時に実行すればOK
 podman run -d --replace \
   --name comfyui \
   -p 8188:8188 \
-  -p 8888:8888 \
-  --volume "$(pwd)/data:/workspace/data" \
-  --volume "$(pwd)/output:/workspace/output" \
+  --volume "$(pwd)/data:/workspace" \
   --device "nvidia.com/gpu=all" \
-  --env ENABLED_COMFYUI_PREVIEW_GALLERY=${ENABLED_COMFYUI_PREVIEW_GALLERY:-"false"} \
+  --env NUMBER_OF_GPUS=1 \
   --env CLI_ARGS="${ARGS}" \
+  --env "ENABLED_COMFYUI_PREVIEW_GALLERY=${ENABLED_COMFYUI_PREVIEW_GALLERY:-'false'}" \
   localhost/comfyui:${COMFYUI_TAG:-"latest"}

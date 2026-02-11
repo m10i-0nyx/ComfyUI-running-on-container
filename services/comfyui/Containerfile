@@ -1,19 +1,24 @@
 # syntax=docker/dockerfile:1
-FROM docker.io/nvidia/cuda:13.1.0-devel-ubuntu24.04 AS builder
+FROM docker.io/nvidia/cuda:13.1.1-runtime-ubuntu24.04
 ENV COMFYUI_DIR=/comfyui
 ENV UV_PYTHON_INSTALL_DIR=/opt/python
+ENV UV_LINK_MODE=copy
 ENV VENV_PATH=/opt/python-venv
+ENV WORKSPACE="/workspace"
+ENV PYTHONPATH="${PYTHONPATH}:${pwd}"
 ENV PATH="/root/.local/bin:${VENV_PATH}/bin:${PATH}"
-ARG COMFYUI_TAG
 
 RUN set -eux \
     && apt-get update \
     && apt-get full-upgrade -y --no-install-recommends \
-    && apt-get install -y --no-install-recommends git ninja-build curl \
+    && apt-get install -y --no-install-recommends curl wget git aria2 ca-certificates parallel vim bash bash-completion libxcb1 libgl1 libglib2.0 mesa-utils libgl1-mesa-dri libglx-mesa0 libopengl0 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && uv venv -p 3.13 ${VENV_PATH} \
-    && . ${VENV_PATH}/bin/activate \
-    && uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130
+    && . ${VENV_PATH}/bin/activate
+
+ARG COMFYUI_TAG
 
 RUN set -eux \
     # ComfyUI をクローン,　依存関係をインストール
@@ -24,96 +29,20 @@ RUN set -eux \
     && uv pip install -r requirements.txt \
     && uv pip install -r manager_requirements.txt
 
-RUN set -eux \
-    # ComfyUI-Impact-Pack をクローン,　依存関係をインストール
-    && cd ${COMFYUI_DIR}/custom_nodes \
-    && git clone -b Main --depth 1 https://github.com/ltdrdata/ComfyUI-Impact-Pack.git comfyui-impact-pack \
-    && cd comfyui-impact-pack \
-    && uv pip install -r requirements.txt
-
-RUN set -eux \
-    # comfyui-crystools をクローン,　依存関係をインストール
-    && cd ${COMFYUI_DIR}/custom_nodes \
-    && git clone -b main --depth 1 https://github.com/crystian/comfyui-crystools.git comfyui-crystools \
-    && cd comfyui-crystools \
-    && uv pip install -r requirements.txt
-
-RUN set -eux \
-    # ComfyUI-Autocomplete-Plus ノードをインストール
-    && cd ${COMFYUI_DIR}/custom_nodes \
-    && git clone -b main --depth 1 https://github.com/newtextdoc1111/ComfyUI-Autocomplete-Plus.git comfyui-autocomplete-plus
-
-#RUN set -eux \
-#    # ComfyUI-Hunyuan3DWrapper をクローン,　依存関係をインストール
-#    && cd ${COMFYUI_DIR}/custom_nodes/ \
-#    && git clone -b main --depth 1 https://github.com/kijai/ComfyUI-Hunyuan3DWrapper.git ComfyUI-Hunyuan3DWrapper \
-#    && cd ComfyUI-Hunyuan3DWrapper \
-#    && git pull --force origin main \
-#    && uv pip install -r requirements.txt \
-#    # Rasterizer, to build and install
-#    && cd ${COMFYUI_DIR}/custom_nodes/ComfyUI-Hunyuan3DWrapper/hy3dgen/texgen/custom_rasterizer \
-#    && uv pip install --no-build-isolation . \
-#    # For the mesh_processor extension install
-#    && cd ${COMFYUI_DIR}/custom_nodes/ComfyUI-Hunyuan3DWrapper/hy3dgen/texgen/differentiable_renderer \
-#    && uv pip install --no-build-isolation . \
-#    # Boundary Preserving Transform install
-#    && cd ${COMFYUI_DIR}/custom_nodes/ComfyUI-Hunyuan3DWrapper/hy3dgen/shapegen/bpt \
-#    && uv pip install -r requirements.txt
-
-#RUN set -eux \
-#    # Xatlas Upgrade
-#    && cd /tmp \
-#    && uv pip uninstall xatlas \
-#    && git clone --recursive https://github.com/mworchel/xatlas-python.git \
-#    && cd ./xatlas-python/extern \
-#    && rm -rf xatlas \
-#    && git clone --recursive https://github.com/jpcy/xatlas.git \
-#    && cd ./xatlas/source/xatlas \
-#    # 6774行目の「#if 0」を「//#if 0」に
-#    && sed -i '6774s/^#if 0$/\/\/#if 0/' xatlas.cpp \
-#    # 6778行目の「#endif」を「//#endif」に
-#    && sed -i '6778s/^#endif$/\/\/#endif/' xatlas.cpp \
-#    && cd /tmp/xatlas-python/ \
-#    && uv pip install .
-
-RUN set -eux \
-    && uv pip uninstall pynvml \
-    && uv pip install -U nvidia-ml-py \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-FROM docker.io/nvidia/cuda:13.1.0-runtime-ubuntu24.04
-ENV COMFYUI_DIR=/comfyui
-ENV UV_PYTHON_INSTALL_DIR=/opt/python
-ENV VENV_PATH=/opt/python-venv
-
-RUN set -eux \
-    && apt-get update \
-    && apt-get full-upgrade -y --no-install-recommends \
-    && apt-get install -y --no-install-recommends git curl bash bash-completion mesa-utils libgl1-mesa-dri libglx-mesa0 libopengl0 libgl1 libglib2.0-0 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY --from=builder ${UV_PYTHON_INSTALL_DIR} ${UV_PYTHON_INSTALL_DIR}
-COPY --from=builder ${VENV_PATH} ${VENV_PATH}
-COPY --from=builder ${COMFYUI_DIR} ${COMFYUI_DIR}
-
 WORKDIR ${COMFYUI_DIR}
+
 COPY . /container/
-RUN chmod u+x /container/entrypoint.sh \
+
+RUN set -eux \
+    && chmod u+x /container/entrypoint.sh \
     && cp /container/extra_model_paths.yaml ${COMFYUI_DIR} \
-    && mkdir -p ${COMFYUI_DIR}/custom_nodes/ \
-    && mv /container/*.py ${COMFYUI_DIR}/custom_nodes/ \
-    && chmod a+x ${COMFYUI_DIR}/custom_nodes/*.py
+    && rm -rf /root/.cache/uv /root/.cache/pip /tmp/*
 
 # NVIDIAランタイムの設定
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 ENV NVIDIA_DISABLE_REQUIRE=1
 
-ENV WORKSPACE="/workspace"
-ENV PYTHONPATH="${PYTHONPATH}:${PWD}"
-ENV CLI_ARGS="--dont-print-server --enable-manager"
-EXPOSE 8188 8888
-ENTRYPOINT ["/container/entrypoint.sh"]
-CMD python3 -u main.py --listen --port 8188 ${CLI_ARGS}
+ENV NUMBER_OF_GPUS=${NUMBER_OF_GPUS:-1}
+EXPOSE ${LISTEN_PORT:-8188}
+CMD ["bash", "/container/entrypoint.sh"]
