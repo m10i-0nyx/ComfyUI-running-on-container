@@ -5,9 +5,9 @@ set -Eeuo pipefail
 # ComfyUI tag initial value
 export COMFYUI_TAG=""
 
-if [ -f ./.env ]; then
+if [ -f ./env ]; then
   set -a
-  source ./.env
+  source ./env
   set +a
 fi
 

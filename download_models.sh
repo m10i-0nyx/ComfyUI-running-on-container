@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [ -f ./.env ]; then
+if [ -f ./env ]; then
   set -a
-  source ./.env
+  source ./env
   set +a
 fi
 
