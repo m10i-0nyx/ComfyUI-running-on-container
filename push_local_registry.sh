@@ -3,7 +3,7 @@
 export PRIVATE_REGISTRY_URL=${PRIVATE_REGISTRY_URL:-'push.registry.foundation0.link'}
 
 # ComfyUI tag initial value
-export COMFYUI_TAG="v0.11.0"
+export COMFYUI_TAG="v0.14.2"
 
 if [ -f .env ]; then
   set -a
@@ -19,4 +19,3 @@ podman tag ${PRIVATE_REGISTRY_URL}/comfyui-running-on-container:${COMFYUI_TAG:-"
 podman push ${PRIVATE_REGISTRY_URL}/comfyui-running-on-container:latest
 podman image rm ${PRIVATE_REGISTRY_URL}/comfyui-running-on-container:latest
 podman image rm ${PRIVATE_REGISTRY_URL}/comfyui-running-on-container:${COMFYUI_TAG:-"latest"}
-

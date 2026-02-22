@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM docker.io/nvidia/cuda:13.1.1-runtime-ubuntu24.04
+FROM docker.io/ubuntu:24.04
 ENV COMFYUI_DIR=/comfyui
 ENV UV_PYTHON_INSTALL_DIR=/opt/python
 ENV UV_LINK_MODE=copy
@@ -11,7 +11,7 @@ ENV PATH="/root/.local/bin:${VENV_PATH}/bin:${PATH}"
 RUN set -eux \
     && apt-get update \
     && apt-get full-upgrade -y --no-install-recommends \
-    && apt-get install -y --no-install-recommends curl wget git aria2 ca-certificates parallel vim bash bash-completion libxcb1 libgl1 libglib2.0 mesa-utils libgl1-mesa-dri libglx-mesa0 libopengl0 \
+    && apt-get install -y --no-install-recommends curl wget git aria2 ca-certificates parallel vim bash bash-completion libxcb1 libglib2.0  \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
@@ -27,7 +27,8 @@ RUN set -eux \
     && if [ -z "${COMFYUI_TAG}" ]; then export COMFYUI_TAG="$(git describe --tags --abbrev=0)"; fi \
     && git checkout tags/${COMFYUI_TAG} \
     && uv pip install -r requirements.txt \
-    && uv pip install -r manager_requirements.txt
+    && uv pip install -r manager_requirements.txt \
+    && rm -rf /root/.cache/uv /root/.cache/pip /tmp/*
 
 WORKDIR ${COMFYUI_DIR}
 
@@ -42,6 +43,8 @@ RUN set -eux \
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 ENV NVIDIA_DISABLE_REQUIRE=1
+
+ENV CLI_ARGS="--dont-print-server --enable-manager"
 
 ENV NUMBER_OF_GPUS=${NUMBER_OF_GPUS:-1}
 EXPOSE ${LISTEN_PORT:-8188}
