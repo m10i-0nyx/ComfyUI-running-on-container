@@ -1,6 +1,6 @@
 # ComfyUI Version
 # default: latest
-COMFYUI_TAG=v0.14.2
+COMFYUI_TAG=v0.16.0
 
 # Enable ComfyUI Preview Gallery HTTP Server
 # default: false

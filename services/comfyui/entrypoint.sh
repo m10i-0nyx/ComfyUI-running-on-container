@@ -32,6 +32,12 @@ source ${VENV_PATH}/bin/activate
 # Upgrade torch to latest stable
 uv pip install --upgrade "torch>=2.10.0" torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130
 
+# Install ComfyUI requirements
+pushd ${COMFYUI_DIR}
+uv pip install -r requirements.txt
+uv pip install -r manager_requirements.txt
+popd
+
 # --- 3. Print system info ---
 echo "===== NVIDIA info ====="
 nvidia-smi
