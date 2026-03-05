@@ -141,7 +141,6 @@ comfyui-running-on-container/
 ├── download_models.sh                # モデルダウンロードスクリプト
 ├── env                               # 環境変数設定ファイル（カスタマイズ用）
 ├── env.sample                        # env ファイルのテンプレート
-├── push_local_registry.sh            # ローカルレジストリへのプッシュスクリプト
 ├── LICENSE                           # MIT ライセンス
 ├── README.md                         # このファイル
 ├── README.fedora.md                  # Fedora セットアップガイド
